@@ -37,6 +37,14 @@ nAverage = 2
 k_range = [ 0, 1, 2, 3, 4, 5, 6 ]
 #k_range = [ 0, 2, 4, 6, 8 ]
 
+if graph_type == 'RGG':
+    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26 ]
+    k_range = [ i for i in range( 27 ) ]
+elif graph_type == 'BA':
+    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24 ]
+elif graph_type == 'CM':
+    k_range = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
+
 
 average_number_sensors, std_number_sensors = syntheticGraphsSequentialGame( graph_type , n_range = n_range, k_range = k_range, nAverage = nAverage )
 
@@ -45,68 +53,27 @@ if graph_type == 'RGG':
 else:
     fileName = graph_type
 savefig = False
-experiments.plotFigure( relaxation_values, average_number_sensors, std_number_sensors, ylabel = "Sensors", methods = n_range, savefig = savefig, fileName = fileName + '_TotalSensors_nAverage_' + str(nAverage) + '.pdf' )
+experiments.plotFigure( k_range, average_number_sensors, std_number_sensors, ylabel = "$q^*$", methods = n_range, savefig = savefig, fileName = 'twoStepGame_' + fileName + '_nAverage_' + str(nAverage) + '.pdf' )
 
 
 
-#############################
-
-    
-fixed_cameras = rmd.relaxedResolvingSet( g, k )
-nonResolvedSetsOfVertices = rmd.nonResolvedSets( fixed_cameras, k, g = g )
-
-nonResolvedVertices = [ ]
-for elt in nonResolvedSetsOfVertices:
-    nonResolvedVertices += elt
-
-number_cameras = [ ]
-
-for robber in tqdm( range( n ) ):
-    if robber not in nonResolvedVertices:
-        extra_cameras = []
-    else:
-        for elt in nonResolvedSetsOfVertices:
-            if robber in elt:
-                setOfRobber = elt
-                break
-        extra_cameras = partialResolvingSet( g, setOfRobber, print_detailed_running_time = False )
-    number_cameras.append( len( fixed_cameras ) + len( extra_cameras ) )
-
-plt.plot( relaxation_values, average_number_cameras[200] )
-plt.show() 
-"""
-
-
-
-
-
-"""
 # =============================================================================
 # SEQUENTIAL GAME ON REAL NETWORKS
 # =============================================================================
 
-graph_name ='copenhagen-calls'
+graph_names = [ 'authors', 'copenhagen-calls', 'copenhagen-friends' ]
+k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 ]
 
-G = experiments.getRealGraph( graph_name )
-g = ig.Graph.from_networkx( G )
-
-relaxation_values = [ 0, 2, 4, 6, 8 ]
-
-numberCameras, numberFixedCameras, numberExtraCameras = sequentialGame( g, relaxation_values, print_progress = True )
-
-average_number_cameras = [ ]
-std_number_cameras = [ ]
-average_fixedCameras = [ ]
-std_fixedCameras = [ ]
-average_ExtraCameras = [ ]
-std_ExtraCameras = [ ] 
-worst_case_number_cameras = [ ]
-
-for k in relaxation_values:
-    average_number_cameras.append( np.mean( numberCameras[ k ] ) )
-    worst_case_number_cameras.append( np.max( numberCameras[k ] ) )
-    average_fixedCameras.append( np.mean( numberFixedCameras[ k ] ) )
-    average_ExtraCameras.append( np.mean( numberExtraCameras[ k ] ) )
+number_sensors = dict( )
+for graph_name in graph_names:
+    print( graph_name )
+    G = experiments.getRealGraph( graph_name )
+    g = ig.Graph.from_networkx( G )
+    numberCameras, numberFixedCameras, numberExtraCameras = sequentialGame( g, k_range, print_progress = True )
+    number_sensors[ graph_name ] = numberCameras
+    
+savefig = False
+experiments.plotFigure( k_range, number_sensors, ylabel = "$q^*$", methods = graph_names, savefig = savefig, fileName = 'twoStepGame_realGraphs.pdf' )
 
 
 """
@@ -134,8 +101,9 @@ def syntheticGraphsSequentialGame( graph_type , n_range = [200,400,600], k_range
         for run in range( nAverage ):
             g = experiments.generateSyntheticGraph( n, graph_type )
             numberCameras, numberFixedCameras, numberExtraCameras = sequentialGame( g, k_range )
-            for k in k_range:
-                numberSensors[ k ][ run ] = numberCameras[ k ]
+            for dummy in range( len( k_range ) ):
+                k = k_range[ dummy ]
+                numberSensors[ k ][ run ] = numberCameras[ dummy ]
         
         for k in k_range:
             average_numberSensors[ n ].append( np.mean( numberSensors[ k ] ) )
@@ -230,7 +198,7 @@ def resolveaSetOfVertices( target_vertices, g = None, distances = None, fixed_se
 
 
 
-def sequentialMetricDimention( g = None, distances = None, fixed_sensors = [ ], print_detailed_running_time = False ):
+def sequentialMetricDimention( g = None, distances = None, print_detailed_running_time = False ):
     
     if g == None and distances == None:
         raise TypeError( 'You need to provide either the distances or the graph' )
@@ -247,6 +215,7 @@ def sequentialMetricDimention( g = None, distances = None, fixed_sensors = [ ], 
     
     return number_of_iterative_placements
     
+
 
 def sequentialLocalisation( target_vertex, g = None, distances = None, fixed_sensors = [ ], print_detailed_running_time = False ):
     
@@ -285,6 +254,7 @@ def sequentialLocalisation( target_vertex, g = None, distances = None, fixed_sen
         possible_locations = getPossibleLocations( target_vertex, all_vertex_pairs_to_resolve )
 
     return additional_sensors
+
 
 
 def getPossibleLocations( target_vertex, non_resolved_pairs ):
