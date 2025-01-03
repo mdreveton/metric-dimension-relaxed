@@ -87,7 +87,8 @@ def relaxedResolvingSet( g, k, print_detailed_running_time = False ):
     return resolving_set
 
 
-def identificationVectors( S, g = None, distances = None ):
+
+def getIdentificationVectors( S, g = None, distances = None ):
     """
     Given a set of vertices and either the graph or the matrix of distances,
     this function returns the identification vectors of all vertices
@@ -129,9 +130,10 @@ def identificationVectors( S, g = None, distances = None ):
     return identification_vectors
 
 
-def equivalentClasses( identification_vectors ):
+
+def getEquivalentClasses( identification_vectors ):
     
-    equivalentClasses = dict( )
+    equivalent_classes = dict( )
     unique_identification_vectors = [ ]
     n = len( identification_vectors )
     
@@ -139,62 +141,37 @@ def equivalentClasses( identification_vectors ):
         vector_profile_u = identification_vectors[ u ]
         if vector_profile_u not in unique_identification_vectors:
             unique_identification_vectors.append( vector_profile_u )
-            equivalentClasses[ str( vector_profile_u ) ] = [ u ]
+            equivalent_classes[ str( vector_profile_u ) ] = [ u ]
         else:
-            equivalentClasses[ str( vector_profile_u ) ].append( u )
+            equivalent_classes[ str( vector_profile_u ) ].append( u )
     
-    return equivalentClasses
+    return equivalent_classes
 
 
-def nonResolvedSets( S, g = None, distances = None ):
-    """
-    
-    Given a set of vertices, a relaxation k value k and either the graph or the matrix of distances,
-    the function returns the equivalent classes that have cardinality larger or equal than 2
-    (recall that an equivalent class is a set of vertices with same identification vector)
-    
-    Parameters
-    ----------
-    S : set
-        set of vertices.
-    k : int
-        relaxation.
-    g : TYPE, optional
-        DESCRIPTION. The default is None.
-    distances : TYPE, optional
-        DESCRIPTION. The default is None.
 
-    Raises
-    ------
-    TypeError
-        DESCRIPTION.
+def getNonResolvedEquivalentClasses( equivalent_classes ):
+    non_resolved_equivalent_classes = [ ]
+    
+    for equivalent_class in equivalent_classes.values( ):
+        
+        if len( equivalent_class ) >= 2:
+            non_resolved_equivalent_classes.append( equivalent_class )
+    
+    return non_resolved_equivalent_classes
 
-    Returns
-    -------
-    nonResolvedSetsOfVertices : TYPE
-        DESCRIPTION.
 
-    """
-    
-    
-    nonResolvedSetsOfVertices = [ ]
-    for distance_profile in unique_distance_profiles:
-        if len( distance_profiles_dict[ str( distance_profile ) ] ) >= 2:
-            nonResolvedSetsOfVertices.append( distance_profiles_dict[ str(distance_profile) ] )
 
-    return nonResolvedSetsOfVertices
-
-def nonResolvedVertices( S, k, g = None, distances = None ):
+def getNonResolvedVertices( equivalent_classes ):
+    non_resolved_vertices = [ ]
     
-    nonResolvedSetsOfVertices = nonResolvedSets( S, k, g = g, distances = distances )
+    for equivalent_class in equivalent_classes.values( ):
+        
+        if len( equivalent_class ) >= 2:
+            non_resolved_vertices += equivalent_class
     
-    nonResolvedVertices = [ ]
-    for nonResolvedSet in nonResolvedSetsOfVertices:
-        for vertex in nonResolvedSet:
-            nonResolvedVertices.append( vertex )
-    
-    return nonResolvedVertices
-    
+    return non_resolved_vertices
+   
+ 
 
 # ##############################################
 # Helpers functions
