@@ -520,12 +520,12 @@ def plotFigure( x, accuracy_mean, accuracy_err = None, methods = None,
     if methods is None and accuracy_err is None:
         plt.plot( x, accuracy_mean, linestyle = '-.', marker = '.' )
         
-    elif methods == None and accuracy_err is not None:
+    elif methods is None and accuracy_err is not None:
         plt.errorbar( x, accuracy_mean, yerr = accuracy_err, linestyle = '-.' )
         
     elif methods is not None and accuracy_err is None:
         for method in methods:
-            plt.plot( x, accuracy_mean[ method ], linestyle = '-.', label = method )
+            plt.plot( x, accuracy_mean[ method ], linestyle = '-.', marker = '.', label = method )
             legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
             plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
     

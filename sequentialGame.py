@@ -61,9 +61,33 @@ experiments.plotFigure( k_range, average_number_sensors, std_number_sensors, yla
 # SEQUENTIAL GAME ON REAL NETWORKS
 # =============================================================================
 
-graph_names = [ 'authors', 'copenhagen-calls', 'copenhagen-friends' ]
-k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 ]
 
+graph_name = 'authors'
+if graph_name == 'authors':
+    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22 ]
+elif graph_name == 'copenhagen-calls':
+    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24 ]
+elif graph_name == 'copenhagen-friends':
+    k_range = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+
+G = experiments.getRealGraph( graph_name )
+g = ig.Graph.from_networkx( G )
+number_sensors, numberFixedCameras, numberExtraCameras = sequentialGame( g, k_range, print_progress = True )
+
+savefig = False
+#experiments.plotFigure( k_range, number_sensors, ylabel = "$q^*$", savefig = savefig, fileName = 'twoStepGame_' + graph_name + '.pdf' )
+curves = dict( )
+curves[ '$q^*_k$' ] = number_sensors
+curves[ '$MD_k$' ] = numberFixedCameras
+methods = [ '$q^*_k$', '$MD_k$' ]
+experiments.plotFigure( k_range, curves, ylabel = "Number sensors", methods = legend, savefig = savefig, fileName = 'twoStepGame_' + graph_name + '.pdf' )
+
+
+plt.plot( k_range, number_sensors )
+plt.plot( k_range, numberFixedCameras )
+plt.show()
+
+graph_names = [ 'authors', 'copenhagen-calls', 'copenhagen-friends' ]
 number_sensors = dict( )
 for graph_name in graph_names:
     print( graph_name )
@@ -71,7 +95,7 @@ for graph_name in graph_names:
     g = ig.Graph.from_networkx( G )
     numberCameras, numberFixedCameras, numberExtraCameras = sequentialGame( g, k_range, print_progress = True )
     number_sensors[ graph_name ] = numberCameras
-    
+
 savefig = False
 experiments.plotFigure( k_range, number_sensors, ylabel = "$q^*$", methods = graph_names, savefig = savefig, fileName = 'twoStepGame_realGraphs.pdf' )
 
