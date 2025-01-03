@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 
 
 import relaxedMetricDimension as rmd
+import utils as utils
 #from experiments import plotFigure
 import experiments as experiments
 
@@ -203,7 +204,7 @@ for k in relaxation_values:
 
 
 
-def partialResolvingSet( g, setToResolve, print_detailed_running_time = True ):
+def partialResolvingSet( setToResolve, g = None, distances = None, print_detailed_running_time = True ):
     """    
     Parameters
     ----------
@@ -219,28 +220,33 @@ def partialResolvingSet( g, setToResolve, print_detailed_running_time = True ):
     """
     resolving_set = set ( )
     
+    if g == None and distances == None:
+        raise TypeError( 'You need to provide either the graph or the distances' )
     
-    #print("Start distance computations")
-    start = time.time()
-    #g = rx.networkx_converter( graph )
-    #distances = rx.all_pairs_dijkstra_path_lengths( g , edge_cost_fn = lambda edge: 1 )
-    #distances = dict(nx.all_pairs_shortest_path_length(graph))
-    #g = ig.Graph.from_networkx(graph)
-    distances = g.distances( )
-    end = time.time()
-    if print_detailed_running_time:
-        print( 'Distances computations took : ' + str( end - start ) + ' seconds' )
+    elif distances == None:
+        n = g.vcount( )
+        #print("Start distance computations")
+        start = time.time()
+        #g = rx.networkx_converter( graph )
+        #distances = rx.all_pairs_dijkstra_path_lengths( g , edge_cost_fn = lambda edge: 1 )
+        #distances = dict(nx.all_pairs_shortest_path_length(graph))
+        #g = ig.Graph.from_networkx(graph)
+        distances = g.distances( )
+        end = time.time()
+        if print_detailed_running_time:
+            print( 'Distances computations took : ' + str( end - start ) + ' seconds' )
 
     #print("Start subset generations")
     start = time.time( )
-    n = g.vcount( )
     U = set( (u,v) for u in setToResolve for v in setToResolve if u!= v )
+    #U = set( ( u,v ) for u in setToResolve for v in setToResolve if u < v )
+
     S = { }
     for node in range( n ):
         S_node = [ ]
         #distances_to_nodes = set( distances[ node ].values() )
         distances_to_nodes = set( distances[ node ] )
-        nodes_other_than_node = [ u for u in range( n ) if u != node ]
+        nodes_other_than_node = [ u for u in range( n ) if u != node ] #TODO: it seems this line is wrong, need to replace by the set of vertices to be resolved and not all vertices !!!
         for dummy in distances_to_nodes:
             nodes_at_distances_dummy = [ u for u in nodes_other_than_node if distances[node][u] == dummy ]
             
@@ -259,7 +265,7 @@ def partialResolvingSet( g, setToResolve, print_detailed_running_time = True ):
         resolving_set.add( new_resolving_node )
         resolved_pairs = U - S[ new_resolving_node ] 
         U = U.difference( resolved_pairs )
-    end = time.time()
+    end = time.time( )
     if print_detailed_running_time:
         print( 'Greedy search of resolving vertices took : ' + str( end - start ) + ' seconds' )
 
@@ -267,43 +273,64 @@ def partialResolvingSet( g, setToResolve, print_detailed_running_time = True ):
 
 
 
-def locateSingleVertex( target_vertex, g = None, distances = None, resolved_vertices = None, sensors = None ):
+def resolveaSetOfVertices( target_vertices, g = None, distances = None, fixed_sensors = [ ], print_detailed_running_time = False ):
     
     if g == None and distances == None:
         raise TypeError( 'You need to provide either the distances or the graph' )
     
-    if g == None:
-        n = len( distances )
     if distances == None:
         distances = g.distances( )
-        n = g.vcount( )
-        
-    if sensors == None and resolved_vertices == None:
-        resolved_vertices = [ ]
-    elif sensors == None:
-        resolved_vertices = 0
+        n = g.vcount( )  
+    else:
+        n = len( distances )
 
-
+    start = time.time( )
+    #all_vertex_pairs_to_resolve = set( [ (min(pair), max(pair) ) for pair in combinations( target_vertices, 2 ) ] ) 
     
+    #all_vertex_pairs_to_resolve = set( (u,v) for u in target_vertices for v in target_vertices if u!= v )
+    all_vertex_pairs_to_resolve = set( [ (pair[0], pair[1] ) for pair in combinations( target_vertices, 2 ) ] ) 
+
+    non_resolved_pairs = dict( )
+    for vertex in range( n ):
+        S_vertex = [ ]
+        vertices_to_resolve = [ u for u in target_vertices if u != vertex ]
+        for dummy in set( distances[ vertex ] ):
+            nodes_at_distance_dummy = [ u for u in vertices_to_resolve if distances[ vertex ][ u ] == dummy ]
+            for pair in combinations( nodes_at_distance_dummy, 2 ): #loop over all pair of vertices at sane distance of u
+                S_vertex.append( pair )
+                #S_vertex.append( ( min(pair), max(pair) ) ) #To ensure list of edges is always the one with smallest value first.
+        non_resolved_pairs[ vertex ] = set( S_vertex )
+    end = time.time()
+    if print_detailed_running_time:
+        print( 'Subset generation took : ' + str( end - start ) + ' seconds' )
+
+    start = time.time( )
+    sensors = set( fixed_sensors )
+    additional_sensors = set( )
+    while len( all_vertex_pairs_to_resolve ) > 0:
+        new_resolving_node = np.argmin( [ len( non_resolved_pairs[ vertex ].intersection( all_vertex_pairs_to_resolve ) ) for vertex in range( n ) ] )
+        #NOTE: minimizing the number of non resolved pairs is equivalent to maximizing the number of resolved pairs
+        sensors.add( new_resolving_node )
+        additional_sensors.add( new_resolving_node )
+        resolved_pairs = all_vertex_pairs_to_resolve - non_resolved_pairs[ new_resolving_node ] 
+        all_vertex_pairs_to_resolve = all_vertex_pairs_to_resolve.difference( resolved_pairs )
+    end = time.time()
+    if print_detailed_running_time:
+        print( 'Greedy search of resolving vertices took : ' + str( end - start ) + ' seconds' )
     
-        
-    return 0
+    return additional_sensors
 
 
 
 
-def sequentialGameNew( g, relaxation_values, print_progress = False ):
+def sequentialGame( g, relaxation_values, print_progress = False ):
         
     numberCameras = dict( )
     numberFixedCameras = dict( )
     numberExtraCameras = dict( )
-    n = g.vcount( )
     
-    for k in relaxation_values:
-        numberCameras[ k ] = np.zeros( n )
-        numberFixedCameras[ k ] = np.zeros( n )
-        numberExtraCameras[ k ] = np.zeros( n )
-    
+    distances = g.distances( )
+        
     if print_progress:
         loop = tqdm( range( len( relaxation_values ) ) )
     else:
@@ -312,46 +339,27 @@ def sequentialGameNew( g, relaxation_values, print_progress = False ):
     for k_ in loop:
         k = relaxation_values[ k_ ]
         #for k in relaxation_values:
-        fixed_cameras = rmd.relaxedResolvingSet( g, k, print_detailed_running_time = False )
-        nonResolvedSetsOfVertices = rmd.nonResolvedSets( fixed_cameras, k, g = g )
+        fixed_sensors = rmd.relaxedResolvingSet( g, k, print_detailed_running_time = False )
         
-        nonResolvedVertices = [ ]
-        for elt in nonResolvedSetsOfVertices:
-            nonResolvedVertices += elt
+        identification_vectors = utils.getIdentificationVectors( fixed_sensors, g = g, distances = distances )
+        equivalent_classes = utils.getEquivalentClasses( identification_vectors )
+        #nonResolvedSetsOfVertices = utils.getNonResolvedVertices( equivalent_classes )
         
-        equivalent_classes = getEquivalentClasses( g, fixed_cameras )
+        number_additional_sensors_for_worst_equiv_class = 0
+        for equivalent_class in equivalent_classes.values( ):
+            additional_sensors = resolveaSetOfVertices( equivalent_class, g = g, distances = distances, print_detailed_running_time=False )
+            if len( additional_sensors ) > number_additional_sensors_for_worst_equiv_class:
+                number_additional_sensors_for_worst_equiv_class = len( additional_sensors )
         
-        #for equivalent_class in equivalent_classes:
-            
-        
-        robber_positions = list( range( g.vcount() ) )
-        np.random.shuffle( robber_positions )
-        robber_positions = robber_positions[ : samplingSize ]
-        
-        for sampling in range( samplingSize ):
-        #for sampling_robber_position in robber_positions:
-            
-            robber = robber_positions[ sampling ]
-                
-            if robber not in nonResolvedVertices:
-                extra_cameras = [ ]
-            else:
-                for elt in nonResolvedSetsOfVertices:
-                    if robber in elt:
-                        setOfRobber = elt
-                        break
-                extra_cameras = partialResolvingSet( g, setOfRobber, print_detailed_running_time = print_progress )
-            
-            numberCameras[ k ][ sampling ] = len( extra_cameras ) + len( fixed_cameras )
-            numberFixedCameras[ k ][ sampling ] = len( fixed_cameras )
-            numberExtraCameras[ k ][ sampling ] = len( extra_cameras )
+        numberCameras[ k ] = number_additional_sensors_for_worst_equiv_class + len( fixed_sensors )
+        numberFixedCameras[ k ] = len( fixed_sensors )
+        numberExtraCameras[ k ] = number_additional_sensors_for_worst_equiv_class
 
     return numberCameras, numberFixedCameras, numberExtraCameras
 
-    
 
 
-def sequentialGame( g, relaxation_values, samplingSize = None, print_progress = False ):
+def sequentialGameOLD( g, relaxation_values, samplingSize = None, print_progress = False ):
     
     if samplingSize == None:
         samplingSize = g.vcount( )

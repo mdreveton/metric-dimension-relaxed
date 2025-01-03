@@ -38,7 +38,7 @@ def getIdentificationVectors( S, g = None, distances = None ):
     if distances == None:
         distances = g.distances( )
         n = g.vcount( )
-    if g == None:
+    else:
         n = len( distances )
     
     identification_vectors = [ ]
