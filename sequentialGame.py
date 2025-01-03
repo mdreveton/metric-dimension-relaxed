@@ -266,29 +266,6 @@ def partialResolvingSet( g, setToResolve, print_detailed_running_time = True ):
     return resolving_set
 
 
-def getEquivalentClasses( S, u, g = None, distances = None ):
-    """
-    
-    """
-    if distances == None:
-        distances = g.distances( )
-        n = g.vcount()
-    if g == None:
-        n = len( distances )
-    
-    equivalentClasses = dict( )    
-    equivalentClasses = dict( )
-    unique_distance_profiles = [ ]
-    for u in range( n ):
-        vector_profile_u = [ distances[u][source] for source in S ] 
-        if vector_profile_u not in unique_distance_profiles:
-            unique_distance_profiles.append( vector_profile_u )
-            equivalentClasses[ str(vector_profile_u) ] = [ u ]
-        else:
-            equivalentClasses[ str(vector_profile_u) ].append( u )
-    
-    return equivalentClasses
-
 
 def locateSingleVertex( target_vertex, g = None, distances = None, resolved_vertices = None, sensors = None ):
     
@@ -299,13 +276,15 @@ def locateSingleVertex( target_vertex, g = None, distances = None, resolved_vert
         n = len( distances )
     if distances == None:
         distances = g.distances( )
-        n = g.vcount()
+        n = g.vcount( )
         
     if sensors == None and resolved_vertices == None:
         resolved_vertices = [ ]
     elif sensors == None:
         resolved_vertices = 0
 
+
+    
     
         
     return 0
