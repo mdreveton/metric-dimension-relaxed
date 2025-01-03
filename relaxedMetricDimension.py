@@ -35,7 +35,6 @@ def relaxedResolvingSet( g, k, print_detailed_running_time = False ):
     """
     resolving_set = set ( )
     
-    
     #print("Start distance computations")
     start = time.time()
     #g = rx.networkx_converter( graph )

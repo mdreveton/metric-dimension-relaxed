@@ -71,94 +71,10 @@ g = ig.GraphBase.simplify(g)
 graph_type = 'GW'
 n_range = [ 200, 600, 1000 ]
 nAverage = 20
-relaxation_values = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 , 9 ]
-relaxation_values = [ 0, 1, 2, 3, 4, 5, 6 ]
+k_range = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 , 9 ]
+k_range = [ 0, 1, 2, 3, 4, 5, 6 ]
 
-
-average_sizeResolvingSet = dict( )
-std_sizeResolvingSet = dict( )
-
-average_relaxation_ratio = dict( )
-std_relaxation_ratio = dict( )
-
-average_sizeLargestNonResolvedSet = dict( )
-std_sizeLargestNonResolvedSet = dict( )
-
-average_ratioNonResolvedVertices = dict( )
-std_ratioNonResolvedVertices = dict( )
-
-average_ratioWithDegree = dict( )
-std_ratioWithDegree = dict( )
-
-
-for n in n_range:
-    average_sizeResolvingSet[ n ] = [ ]
-    std_sizeResolvingSet[ n ] = [ ]
-
-    average_relaxation_ratio[ n ] = [ ]
-    std_relaxation_ratio[ n ] = [ ]
-    
-    average_sizeLargestNonResolvedSet[ n ] = [ ]
-    std_sizeLargestNonResolvedSet[ n ] = [ ]
-    
-    average_ratioNonResolvedVertices[ n ] = [ ]
-    std_ratioNonResolvedVertices[ n ] = [ ]
-    
-    average_ratioWithDegree[ n ] = [ ]
-    std_ratioWithDegree[ n ] = [ ]
-
-
-for dummy in tqdm( range(len(n_range))):
-    n = n_range[ dummy ]
-    
-    sizeLargestNonResolvedSet = dict( )
-    ratioNonResolvedVertices = dict( )
-    sizeResolvingSet = dict( )
-    ratioWithDegree = dict( )
-    
-    for k in relaxation_values:
-        sizeLargestNonResolvedSet[ k ] = np.zeros( nAverage )
-        ratioNonResolvedVertices[ k ] = np.zeros( nAverage )
-        sizeResolvingSet[ k ] = np.zeros( nAverage )
-        ratioWithDegree[ k ] = np.zeros( nAverage )
-    
-    for run in range( nAverage ):
-        
-        g = generateSyntheticGraph( n, graph_type )
-
-        for k in relaxation_values:
-            resolving_set = rmd.relaxedResolvingSet( g, k )
-            nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
-            
-            sizeResolvingSet[ k ][ run ] = len( resolving_set )
-            
-            if nonResolvedSetsOfVertices == [ ]:
-                sizeLargestNonResolvedSet[ k ][ run ] = 0
-                ratioNonResolvedVertices[ k ][ run ] = 0 
-            else:
-                sizeLargestNonResolvedSet[ k ][ run ] = np.max( [ len(subset) for subset in nonResolvedSetsOfVertices ] )
-                ratioNonResolvedVertices[ k ][ run ] = np.sum( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) / n
-            
-            average_degree = 2 * g.ecount( ) / g.vcount( )
-            ratioWithDegree[ k ][ run ] = (average_degree)**( k//2 ) * sizeResolvingSet[ k ][ run ] / sizeResolvingSet[ 0 ][ run ]
-
-    for k in relaxation_values:
-        average_sizeResolvingSet[ n ].append( np.mean( sizeResolvingSet[k] ) )
-        std_sizeResolvingSet[ n ].append( np.std( sizeResolvingSet[k] ) )
-
-        average_relaxation_ratio[ n ].append( np.mean( sizeResolvingSet[k] / sizeResolvingSet[ 0 ] ) )
-        std_relaxation_ratio[ n ].append( np.std( sizeResolvingSet[k] / sizeResolvingSet[ 0 ] ) )
-        
-        average_sizeLargestNonResolvedSet[ n ].append( np.mean( sizeLargestNonResolvedSet[k] ) )
-        std_sizeLargestNonResolvedSet[ n ].append( np.std( sizeLargestNonResolvedSet[k] ) )
-        
-        average_ratioNonResolvedVertices[ n ].append( np.mean( ratioNonResolvedVertices[k] ) )
-        std_ratioNonResolvedVertices[ n ].append( np.std( ratioNonResolvedVertices[k] ) )
-        
-        average_ratioWithDegree[ n ].append( np.mean( ratioWithDegree[k] ) )
-        std_ratioWithDegree[ n ].append( np.std( ratioWithDegree[k] ) )
-
-
+average_sizeResolvingSet, std_sizeResolvingSet, average_sizeLargestNonResolvedSet, std_sizeLargestNonResolvedSet, average_ratioNonResolvedVertices, std_ratioNonResolvedVertices = syntheticGraphsEvolutionMetricDimension( graph_type , n_range = n_range, k_range = k_range, nAverage = nAverage ):
     
 if graph_type == 'RGG':
     fileName = 'RGG_1,5'
@@ -167,17 +83,11 @@ else:
 
 savefig = False
 plotFigure( relaxation_values, average_sizeResolvingSet, accuracy_err = std_sizeResolvingSet, ylabel = "$MD_k$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_nAverage_' + str(nAverage) + '.pdf' )
-plotFigure( relaxation_values, average_relaxation_ratio, accuracy_err = std_relaxation_ratio, ylabel = "Relaxation ratio", methods = n_range, savefig = savefig, fileName = fileName + '_relaxationRatio_nAverage_' + str(nAverage) + '.pdf' )
+#plotFigure( relaxation_values, average_relaxation_ratio, accuracy_err = std_relaxation_ratio, ylabel = "Relaxation ratio", methods = n_range, savefig = savefig, fileName = fileName + '_relaxationRatio_nAverage_' + str(nAverage) + '.pdf' )
 plotFigure( relaxation_values, average_sizeLargestNonResolvedSet, accuracy_err = std_sizeLargestNonResolvedSet, ylabel = r"$\alpha$", methods = n_range, savefig = savefig, fileName = fileName + '_sizeLargestNonResolved_nAverage_' + str(nAverage) + '.pdf' )
 plotFigure( relaxation_values, average_ratioNonResolvedVertices, accuracy_err = std_ratioNonResolvedVertices, ylabel = 'Ratio non-resolved', methods = n_range, savefig = savefig, fileName = fileName + '_ratioNonResolvedVertices_nAverage_' + str(nAverage) + '.pdf' )
-plotFigure( relaxation_values, average_ratioWithDegree, accuracy_err = std_ratioWithDegree, ylabel = 'Ratio with degree', methods = n_range, savefig = savefig, fileName = fileName + '_ratioWithDegree_nAverage_' + str(nAverage) + '.pdf' )
 
 
-"""
-
-
-
-"""
 # =============================================================================
 # SYNTHETIC GRAPHS: VIZUALISATION OF RESOLVING SET IN SMALL GRAPHS
 # =============================================================================
@@ -215,9 +125,7 @@ if graph_type in [ 'BA', 'GW' ]:
 else:
     k_range = [ 0, 1, 2, 3, 4 ]
 
-
 singleGraphVisualization(g, G, my_pos = my_pos, filename = graph_type, savefig = False )
-
 
 
 
@@ -288,6 +196,131 @@ g = ig.Graph.from_networkx( G )
 
 """
 
+
+# =============================================================================
+# EVOLUTION METRIC DIMENSION
+# =============================================================================
+
+def syntheticGraphsEvolutionMetricDimension( graph_type , n_range = [200,400,600], k_range = [0,1,2,3,4], nAverage = 20 ):
+    
+    if graph_type not in synthetic_graph_implemented:
+        raise TypeError( 'The type of graph should belong to ', str( graph_type ) )
+    
+    average_sizeResolvingSet = dict( )
+    std_sizeResolvingSet = dict( )
+
+    average_sizeLargestNonResolvedSet = dict( )
+    std_sizeLargestNonResolvedSet = dict( )
+
+    average_ratioNonResolvedVertices = dict( )
+    std_ratioNonResolvedVertices = dict( )
+
+    for n in n_range:
+        average_sizeResolvingSet[ n ] = [ ]
+        std_sizeResolvingSet[ n ] = [ ]
+        
+        average_sizeLargestNonResolvedSet[ n ] = [ ]
+        std_sizeLargestNonResolvedSet[ n ] = [ ]
+        
+        average_ratioNonResolvedVertices[ n ] = [ ]
+        std_ratioNonResolvedVertices[ n ] = [ ]
+        
+
+    for dummy in tqdm( range(len(n_range))):
+        n = n_range[ dummy ]
+        
+        sizeLargestNonResolvedSet = dict( )
+        ratioNonResolvedVertices = dict( )
+        sizeResolvingSet = dict( )
+        ratioWithDegree = dict( )
+        
+        for k in k_range:
+            sizeLargestNonResolvedSet[ k ] = np.zeros( nAverage )
+            ratioNonResolvedVertices[ k ] = np.zeros( nAverage )
+            sizeResolvingSet[ k ] = np.zeros( nAverage )
+            ratioWithDegree[ k ] = np.zeros( nAverage )
+        
+        for run in range( nAverage ):
+            
+            g = generateSyntheticGraph( n, graph_type )
+
+            for k in k_range:
+                resolving_set = rmd.relaxedResolvingSet( g, k )
+                nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
+                sizeResolvingSet[ k ][ run ] = len( resolving_set )
+                
+                if nonResolvedSetsOfVertices == [ ]:
+                    sizeLargestNonResolvedSet[ k ][ run ] = 0
+                    ratioNonResolvedVertices[ k ][ run ] = 0 
+                else:
+                    sizeLargestNonResolvedSet[ k ][ run ] = np.max( [ len(subset) for subset in nonResolvedSetsOfVertices ] )
+                    ratioNonResolvedVertices[ k ][ run ] = np.sum( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) / n
+                
+                average_degree = 2 * g.ecount( ) / g.vcount( )
+                ratioWithDegree[ k ][ run ] = (average_degree)**( k//2 ) * sizeResolvingSet[ k ][ run ] / sizeResolvingSet[ 0 ][ run ]
+
+        for k in k_range:
+            average_sizeResolvingSet[ n ].append( np.mean( sizeResolvingSet[k] ) )
+            std_sizeResolvingSet[ n ].append( np.std( sizeResolvingSet[k] ) )
+
+            #average_relaxation_ratio[ n ].append( np.mean( sizeResolvingSet[k] / sizeResolvingSet[ 0 ] ) )
+            #std_relaxation_ratio[ n ].append( np.std( sizeResolvingSet[k] / sizeResolvingSet[ 0 ] ) )
+            
+            average_sizeLargestNonResolvedSet[ n ].append( np.mean( sizeLargestNonResolvedSet[k] ) )
+            std_sizeLargestNonResolvedSet[ n ].append( np.std( sizeLargestNonResolvedSet[k] ) )
+            
+            average_ratioNonResolvedVertices[ n ].append( np.mean( ratioNonResolvedVertices[k] ) )
+            std_ratioNonResolvedVertices[ n ].append( np.std( ratioNonResolvedVertices[k] ) )
+            
+            #average_ratioWithDegree[ n ].append( np.mean( ratioWithDegree[k] ) )
+            #std_ratioWithDegree[ n ].append( np.std( ratioWithDegree[k] ) )
+
+    return average_sizeResolvingSet, std_sizeResolvingSet, average_sizeLargestNonResolvedSet, std_sizeLargestNonResolvedSet, average_ratioNonResolvedVertices, std_ratioNonResolvedVertices
+
+
+def realGraphsEvolutionMetricDimension( graph_names = real_graph_implemented, k_range = [0,1,2,3,4] ):
+    
+    sizeResolvingSet = dict( )
+    relaxationRatio = dict( )
+    largestNonResolvedSet = dict( )
+    ratioNonResolvedVertices = dict( )
+    #ratioWithDegree = dict( )
+    
+    for graph_name in graph_names:
+        sizeResolvingSet[ graph_name ] = [ ]
+        relaxationRatio[ graph_name ] = [ ]
+        largestNonResolvedSet[ graph_name ] = [ ]
+        ratioNonResolvedVertices[ graph_name ] = [ ]
+        
+    for graph_name in graph_names:
+        print( graph_name )
+        
+        G = getRealGraph( graph_name )
+        g = ig.Graph.from_networkx( G )
+                
+        for k in k_range:
+            resolving_set = rmd.relaxedResolvingSet( g, k )
+            nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
+
+            sizeResolvingSet[ graph_name ].append( len( resolving_set ) )
+            
+            if len( nonResolvedSetsOfVertices ) == 0:
+                largestNonResolvedSet[ graph_name ].append( 0 )
+                ratioNonResolvedVertices[ graph_name ].append( 0 ) 
+            else:
+                largestNonResolvedSet[ graph_name ].append( np.max( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) )
+                ratioNonResolvedVertices[ graph_name ].append( np.sum( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) / g.vcount( ) )
+                
+                #average_degree = 2 * g.ecount( ) / g.vcount( )
+                #ratioWithDegree[ graph_name ][ k ] = (average_degree)**( k//2 ) * sizeResolvingSet[ k ][ run ] / sizeResolvingSet[ 0 ][ run ]
+    
+    return sizeResolvingSet, relaxationRatio, largestNonResolvedSet, ratioNonResolvedVertices
+
+
+
+# =============================================================================
+# CODE TO GENERATE SYNTHETIC AND REAL GRAPHS
+# =============================================================================
 
 
 def generateSyntheticGraph( n, graph_type, enforceConnected = True ):
@@ -391,143 +424,6 @@ def kNN_graph( X, k = 10 ):
     return g_
 
 
-
-def plotFigure( x, accuracy_mean, accuracy_err = None, methods = None, 
-               xticks = None, yticks = None,
-               xlabel = "k", ylabel = "Relative size",
-               savefig = False, fileName = "fig.pdf" ):
-    
-    if methods is None and accuracy_err is None:
-        plt.plot( x, accuracy_mean, linestyle = '-.', marker = '.' )
-        
-    elif methods == None and accuracy_err is not None:
-        plt.errorbar( x, accuracy_mean, yerr = accuracy_err, linestyle = '-.' )
-        
-    elif methods is not None and accuracy_err is None:
-        for method in methods:
-            plt.plot( x, accuracy_mean[ method ], linestyle = '-.', label = method )
-            legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
-            plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
-    
-    elif methods is not None and accuracy_err is not None:
-        for method in methods:
-            plt.errorbar( x, accuracy_mean[ method ], yerr = accuracy_err[ method ], linestyle = '-.', label = method )
-            legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
-            plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
-
-    plt.xlabel( xlabel, fontsize = SIZE_LABELS)
-    plt.ylabel( ylabel, fontsize = SIZE_LABELS)
-    
-    if xticks != None:
-        plt.xticks( xticks, fontsize = SIZE_TICKS)
-    else:
-        plt.xticks( fontsize = SIZE_TICKS)
-    
-    if yticks != None:
-        plt.yticks( yticks, fontsize = SIZE_TICKS )
-    else:
-        plt.yticks( fontsize = SIZE_TICKS )
-
-
-    if(savefig):
-        plt.savefig( fileName, bbox_inches='tight' )
-    plt.show( )    
-    
-
-    
-def singleGraphVisualization( g = None, G = None, my_pos = None, k_range = [0,1,2,3,4], 
-                             filename = 'mygraph', savefig = False,
-                             node_size = 10 ):
-    
-    if g is None and G is None:
-        raise TypeError( 'You should provide at least g (is igraph format) or G (in networkx format)' )
-        
-    if g is None:
-        G = nx.Graph( g.get_edgelist() )
-        
-    if G is None:
-        g = ig.Graph.from_networkx( G )
-    
-    if my_pos is None:
-        my_pos = nx.spring_layout( G )
-        
-    resolvingSet = dict( )
-    nonResolvedSetsOfVertices = dict( )
-    largestUnresolvedSet = dict( )
-    resolvedVertices = dict( )
-
-    for k in k_range:
-        
-        resolvingSet[k] = rmd.relaxedResolvingSet( g, k )
-        nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolvingSet[k], k, g = g )
-        
-        if len( nonResolvedSetsOfVertices ) > 0:
-            largestUnresolvedSet[ k ] = nonResolvedSetsOfVertices[ np.argmax( [ len( subset) for subset in nonResolvedSetsOfVertices ] ) ]
-        else:
-            largestUnresolvedSet[ k ] = [ ]
-            
-        nonResolvedVertices = [ ]
-        for nonResolved_set in nonResolvedSetsOfVertices:
-            nonResolvedVertices += nonResolved_set
-            
-        resolvedVertices[ k ] = [ i for i in range( g.vcount( ) ) if i not in nonResolvedVertices and i not in resolvingSet[ k ] ]
-        
-    for k in k_range:    
-        plt.figure( figsize=(12, 8) )
-        nx.draw( G, node_size = node_size, pos = my_pos, with_labels = False)
-        nx.draw_networkx_nodes( G, label = True, pos = my_pos, linewidths = 2, edgecolors = 'black', node_color = 'white')
-        nx.draw_networkx_nodes( G, pos = my_pos,label = True, nodelist = resolvingSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'red')
-        nx.draw_networkx_nodes( G, pos = my_pos, nodelist = largestUnresolvedSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'royalblue')
-        nx.draw_networkx_nodes( G, pos = my_pos, nodelist = resolvedVertices[ k ], linewidths = 2, edgecolors = 'black', node_color = 'lightgreen' )
-        nx.draw_networkx_edges( G, my_pos, width = 1 )
-        if savefig:
-            plt.savefig( filename + '_md_' + str(k) + '.pdf')
-        plt.show()
-
-
-
-def realGraphsEvolutionMetricDimension( graph_names = real_graph_implemented, k_range = [0,1,2,3,4] ):
-    
-    sizeResolvingSet = dict( )
-    relaxationRatio = dict( )
-    largestNonResolvedSet = dict( )
-    ratioNonResolvedVertices = dict( )
-    #ratioWithDegree = dict( )
-    
-    for graph_name in graph_names:
-        sizeResolvingSet[ graph_name ] = [ ]
-        relaxationRatio[ graph_name ] = [ ]
-        largestNonResolvedSet[ graph_name ] = [ ]
-        ratioNonResolvedVertices[ graph_name ] = [ ]
-        
-    for graph_name in graph_names:
-        print( graph_name )
-        
-        G = getRealGraph( graph_name )
-        g = ig.Graph.from_networkx( G )
-                
-        for k in k_range:
-            resolving_set = rmd.relaxedResolvingSet( g, k )
-            nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
-
-            sizeResolvingSet[ graph_name ].append( len( resolving_set ) )
-            
-            if len( nonResolvedSetsOfVertices ) == 0:
-                largestNonResolvedSet[ graph_name ].append( 0 )
-                ratioNonResolvedVertices[ graph_name ].append( 0 ) 
-            else:
-                largestNonResolvedSet[ graph_name ].append( np.max( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) )
-                ratioNonResolvedVertices[ graph_name ].append( np.sum( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) / g.vcount( ) )
-                
-                #average_degree = 2 * g.ecount( ) / g.vcount( )
-                #ratioWithDegree[ graph_name ][ k ] = (average_degree)**( k//2 ) * sizeResolvingSet[ k ][ run ] / sizeResolvingSet[ 0 ][ run ]
-    
-    return sizeResolvingSet, relaxationRatio, largestNonResolvedSet, ratioNonResolvedVertices
-    
-    
-
-
-
 def getRealGraph( graph_name ):
     
     if graph_name not in real_graph_implemented:
@@ -610,6 +506,107 @@ def getRealGraphsPositions( graph_name, G = None, seed = 1 ):
         
     return positions
 
+
+
+# =============================================================================
+# CODE TO PLOT FIGURES AND VISUALIZE GRAPHS
+# =============================================================================
+
+def plotFigure( x, accuracy_mean, accuracy_err = None, methods = None, 
+               xticks = None, yticks = None,
+               xlabel = "k", ylabel = "Relative size",
+               savefig = False, fileName = "fig.pdf" ):
+    
+    if methods is None and accuracy_err is None:
+        plt.plot( x, accuracy_mean, linestyle = '-.', marker = '.' )
+        
+    elif methods == None and accuracy_err is not None:
+        plt.errorbar( x, accuracy_mean, yerr = accuracy_err, linestyle = '-.' )
+        
+    elif methods is not None and accuracy_err is None:
+        for method in methods:
+            plt.plot( x, accuracy_mean[ method ], linestyle = '-.', label = method )
+            legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
+            plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
+    
+    elif methods is not None and accuracy_err is not None:
+        for method in methods:
+            plt.errorbar( x, accuracy_mean[ method ], yerr = accuracy_err[ method ], linestyle = '-.', label = method )
+            legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
+            plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
+
+    plt.xlabel( xlabel, fontsize = SIZE_LABELS)
+    plt.ylabel( ylabel, fontsize = SIZE_LABELS)
+    
+    if xticks != None:
+        plt.xticks( xticks, fontsize = SIZE_TICKS)
+    else:
+        plt.xticks( fontsize = SIZE_TICKS)
+    
+    if yticks != None:
+        plt.yticks( yticks, fontsize = SIZE_TICKS )
+    else:
+        plt.yticks( fontsize = SIZE_TICKS )
+
+    if(savefig):
+        plt.savefig( fileName, bbox_inches='tight' )
+    plt.show( )    
+    
+
+    
+def singleGraphVisualization( g = None, G = None, my_pos = None, k_range = [0,1,2,3,4], 
+                             filename = 'mygraph', savefig = False,
+                             node_size = 10 ):
+    
+    if g is None and G is None:
+        raise TypeError( 'You should provide at least g (is igraph format) or G (in networkx format)' )
+        
+    if g is None:
+        G = nx.Graph( g.get_edgelist() )
+        
+    if G is None:
+        g = ig.Graph.from_networkx( G )
+    
+    if my_pos is None:
+        my_pos = nx.spring_layout( G )
+        
+    resolvingSet = dict( )
+    nonResolvedSetsOfVertices = dict( )
+    largestUnresolvedSet = dict( )
+    resolvedVertices = dict( )
+
+    for k in k_range:
+        
+        resolvingSet[k] = rmd.relaxedResolvingSet( g, k )
+        nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolvingSet[k], k, g = g )
+        
+        if len( nonResolvedSetsOfVertices ) > 0:
+            largestUnresolvedSet[ k ] = nonResolvedSetsOfVertices[ np.argmax( [ len( subset) for subset in nonResolvedSetsOfVertices ] ) ]
+        else:
+            largestUnresolvedSet[ k ] = [ ]
+            
+        nonResolvedVertices = [ ]
+        for nonResolved_set in nonResolvedSetsOfVertices:
+            nonResolvedVertices += nonResolved_set
+            
+        resolvedVertices[ k ] = [ i for i in range( g.vcount( ) ) if i not in nonResolvedVertices and i not in resolvingSet[ k ] ]
+        
+    for k in k_range:    
+        plt.figure( figsize=(12, 8) )
+        nx.draw( G, node_size = node_size, pos = my_pos, with_labels = False)
+        nx.draw_networkx_nodes( G, label = True, pos = my_pos, linewidths = 2, edgecolors = 'black', node_color = 'white')
+        nx.draw_networkx_nodes( G, pos = my_pos,label = True, nodelist = resolvingSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'red')
+        nx.draw_networkx_nodes( G, pos = my_pos, nodelist = largestUnresolvedSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'royalblue')
+        nx.draw_networkx_nodes( G, pos = my_pos, nodelist = resolvedVertices[ k ], linewidths = 2, edgecolors = 'black', node_color = 'lightgreen' )
+        nx.draw_networkx_edges( G, my_pos, width = 1 )
+        if savefig:
+            plt.savefig( filename + '_md_' + str(k) + '.pdf')
+        plt.show()
+
+
+# =============================================================================
+# STATISTICS OF THE REAL AND SYNTHETIC GRAPHS
+# =============================================================================
 
 def getGraphsStatistics( graph_names = real_graph_implemented ):
     
