@@ -52,29 +52,29 @@ def relaxedResolvingSet( g, k, print_detailed_running_time = False ):
     start = time.time()
     n = g.vcount()
     U = set( (u,v) for u in range( n ) for v in range( u+1, n ) if distances[u][v] > k )
-    S = { }
-    for node in range( n ):
+    S = dict( )
+    for vertex in range( n ):
         S_node = [ ]
-        #distances_to_nodes = set( distances[ node ].values() )
-        distances_to_nodes = set( distances[ node ] )
-        nodes_other_than_node = [ u for u in range( n ) if u != node ]
+        #distances_to_nodes = set( distances[ vertex ].values() )
+        distances_to_nodes = set( distances[ vertex ] )
+        other_vertices = [ u for u in range( n ) if u != vertex ]
         for dummy in distances_to_nodes:
-            nodes_at_distances_dummy = [ u for u in nodes_other_than_node if distances[node][u] == dummy ]
+            nodes_at_distances_dummy = [ u for u in other_vertices if distances[ vertex ][ u ] == dummy ]
             #all_possible_pairs = [ ( nodes_at_distances_dummy[i], nodes_at_distances_dummy[j] ) for i in range(len(nodes_at_distances_dummy))  for j in range(i+1, len(nodes_at_distances_dummy) ) ] 
             
             #all_possible_pairs = list( combinations(nodes_at_distances_dummy, 2) ) 
             
-            for pair in combinations( nodes_at_distances_dummy, 2 ):
-                if distances[ pair[0] ][ pair[1] ] > k:
+            for pair in combinations( nodes_at_distances_dummy, 2 ): #loop over all pair of vertices at sane distance of u
+                if distances[ pair[0] ][ pair[1] ] > k: #Only add pair of vertices that are at distance more than k
                     S_node.append( pair )
                     #S_node.append( ( min(pair), max(pair) ) ) #To ensure list of edges is always the one with smallest value first.
-        S[ node ] = set( S_node )
+        S[ vertex ] = set( S_node ) 
     end = time.time()
     if print_detailed_running_time:
         print( 'Subset generation took : ' + str( end - start ) + ' seconds' )
     
     #print( "Start greedy search of resolving vertices" )
-    start = time.time()
+    start = time.time( )
     while len( U ) > 0:
         new_resolving_node = np.argmin( [ len( S[ i ].intersection( U ) ) for i in range( n ) ] )
         resolving_set.add( new_resolving_node )
@@ -87,30 +87,95 @@ def relaxedResolvingSet( g, k, print_detailed_running_time = False ):
     return resolving_set
 
 
+def identificationVectors( S, g = None, distances = None ):
+    """
+    Given a set of vertices and either the graph or the matrix of distances,
+    this function returns the identification vectors of all vertices
+    (that is, the element u of the returned list is the vector of the distances between vertex u and the source vertices in S)
+    
+    equivalent classes
+    (recall that an equivalent class is a set of vertices with same identification vector)
+    
+    Parameters
+    ----------
+    S : set
+        set of vertices.
+    g : igraph Graph
+        DESCRIPTION. The default is None.
+    distances : matrix
+        DESCRIPTION. The default is None.
 
-def nonResolvedSets( S, k, g = None, distances = None ):
+    Returns
+    -------
+    nonResolvedSetsOfVertices : set of sets
+        Set with the equivalent classes.
+    """
     
     if distances == None and g == None:
         raise TypeError( 'You need to provide at least either the graph of the matrix of distances' )
     
     if distances == None:
         distances = g.distances( )
-        n = g.vcount()
+        n = g.vcount( )
     if g == None:
         n = len( distances )
     
-    distance_profiles = [ ]
-    distance_profiles_dict = dict( )
-    unique_distance_profiles = [ ]
+    identification_vectors = [ ]
+    
     for u in range( n ):
-        vector_profile_u = [ distances[u][source] for source in S ] 
-        if vector_profile_u not in unique_distance_profiles:
-            unique_distance_profiles.append( vector_profile_u )
-            distance_profiles_dict[ str(vector_profile_u) ] = [ u ]
+        vector_profile_u = [ distances[ u ][ source ] for source in S ]             
+        identification_vectors.append( vector_profile_u )
+        
+    return identification_vectors
+
+
+def equivalentClasses( identification_vectors ):
+    
+    equivalentClasses = dict( )
+    unique_identification_vectors = [ ]
+    n = len( identification_vectors )
+    
+    for u in range( n ):
+        vector_profile_u = identification_vectors[ u ]
+        if vector_profile_u not in unique_identification_vectors:
+            unique_identification_vectors.append( vector_profile_u )
+            equivalentClasses[ str( vector_profile_u ) ] = [ u ]
         else:
-            distance_profiles_dict[ str(vector_profile_u) ].append( u )
-            
-        distance_profiles.append( vector_profile_u )
+            equivalentClasses[ str( vector_profile_u ) ].append( u )
+    
+    return equivalentClasses
+
+
+def nonResolvedSets( S, g = None, distances = None ):
+    """
+    
+    Given a set of vertices, a relaxation k value k and either the graph or the matrix of distances,
+    the function returns the equivalent classes that have cardinality larger or equal than 2
+    (recall that an equivalent class is a set of vertices with same identification vector)
+    
+    Parameters
+    ----------
+    S : set
+        set of vertices.
+    k : int
+        relaxation.
+    g : TYPE, optional
+        DESCRIPTION. The default is None.
+    distances : TYPE, optional
+        DESCRIPTION. The default is None.
+
+    Raises
+    ------
+    TypeError
+        DESCRIPTION.
+
+    Returns
+    -------
+    nonResolvedSetsOfVertices : TYPE
+        DESCRIPTION.
+
+    """
+    
     
     nonResolvedSetsOfVertices = [ ]
     for distance_profile in unique_distance_profiles:
@@ -118,6 +183,17 @@ def nonResolvedSets( S, k, g = None, distances = None ):
             nonResolvedSetsOfVertices.append( distance_profiles_dict[ str(distance_profile) ] )
 
     return nonResolvedSetsOfVertices
+
+def nonResolvedVertices( S, k, g = None, distances = None ):
+    
+    nonResolvedSetsOfVertices = nonResolvedSets( S, k, g = g, distances = distances )
+    
+    nonResolvedVertices = [ ]
+    for nonResolvedSet in nonResolvedSetsOfVertices:
+        for vertex in nonResolvedSet:
+            nonResolvedVertices.append( vertex )
+    
+    return nonResolvedVertices
     
 
 # ##############################################
@@ -125,7 +201,7 @@ def nonResolvedSets( S, k, g = None, distances = None ):
 # ##############################################
 
 
-def is_resolving_set(G, nodes_in_subset, distances):
+def is_resolving_set( G, nodes_in_subset, distances ):
     """Given a graph and the matrix with all shortest paths, 
     test if a set of node resolve the graph
 
@@ -144,11 +220,11 @@ def is_resolving_set(G, nodes_in_subset, distances):
         distances_subset = {}
         for n in nodes_in_subset:
             distances_subset[n] = distances[node][n]
-        dist[node] = tuple(distances_subset.values())
+        dist[node] = tuple( distances_subset.values( ) )
 
     # Check if the vector with all the shortest paths to nodes nodes_in_subset is different for each node in G
     # If it is, then the set of nodes nodes_in_subset resolves the graph G, otherwise it does not
-    res = len( ( set( list(dist.values() ) ) ) ) == G.number_of_nodes()   
+    res = len( ( set( list(dist.values( ) ) ) ) ) == G.number_of_nodes( )   
 
     return res
 
@@ -216,9 +292,8 @@ def md_tree(Graph, k):
     return leaf - n_leaf
 
 
-ggggg
 
-def set_resolved(G, nodes_in_subset):
+def set_resolved( G, nodes_in_subset ):
     """Given a graph and the matrix with all shortest paths, 
     output the set of nodes that are resolved by the given subset
 

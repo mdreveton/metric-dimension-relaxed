@@ -232,8 +232,8 @@ def partialResolvingSet( g, setToResolve, print_detailed_running_time = True ):
         print( 'Distances computations took : ' + str( end - start ) + ' seconds' )
 
     #print("Start subset generations")
-    start = time.time()
-    n = g.vcount()
+    start = time.time( )
+    n = g.vcount( )
     U = set( (u,v) for u in setToResolve for v in setToResolve if u!= v )
     S = { }
     for node in range( n ):
@@ -290,6 +290,29 @@ def getEquivalentClasses( S, u, g = None, distances = None ):
     return equivalentClasses
 
 
+def locateSingleVertex( target_vertex, g = None, distances = None, resolved_vertices = None, sensors = None ):
+    
+    if g == None and distances == None:
+        raise TypeError( 'You need to provide either the distances or the graph' )
+    
+    if g == None:
+        n = len( distances )
+    if distances == None:
+        distances = g.distances( )
+        n = g.vcount()
+        
+    if sensors == None and resolved_vertices == None:
+        resolved_vertices = [ ]
+    elif sensors == None:
+        resolved_vertices = 0
+
+    
+        
+    return 0
+
+
+
+
 def sequentialGameNew( g, relaxation_values, print_progress = False ):
         
     numberCameras = dict( )
@@ -319,7 +342,7 @@ def sequentialGameNew( g, relaxation_values, print_progress = False ):
         
         equivalent_classes = getEquivalentClasses( g, fixed_cameras )
         
-        for equivalent_class in equivalent_classes:
+        #for equivalent_class in equivalent_classes:
             
         
         robber_positions = list( range( g.vcount() ) )
