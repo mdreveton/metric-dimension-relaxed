@@ -38,10 +38,12 @@ k_range = [ 0, 1, 2, 3, 4, 5, 6 ]
 #k_range = [ 0, 2, 4, 6, 8 ]
 
 if graph_type == 'RGG':
-    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26 ]
+    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28 ]
     k_range = [ i for i in range( 27 ) ]
+elif graph_type == 'kNN':
+    k_range = [ i for i in range( 30 ) ]
 elif graph_type == 'BA':
-    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24 ]
+    k_range = [ 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28 ]
 elif graph_type == 'CM':
     k_range = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
 
@@ -50,6 +52,8 @@ average_number_sensors, std_number_sensors = syntheticGraphsSequentialGame( grap
 
 if graph_type == 'RGG':
     fileName = 'RGG_1,5'
+elif graph_type == 'kNN':
+    fileName = 'kNN_2'
 else:
     fileName = graph_type
 savefig = False
@@ -120,6 +124,7 @@ def syntheticGraphsSequentialGame( graph_type , n_range = [200,400,600], k_range
         numberSensors = dict( )
         
         for k in k_range:
+            #print( k )
             numberSensors[ k ] = np.zeros( nAverage )
         
         for run in range( nAverage ):
@@ -131,7 +136,7 @@ def syntheticGraphsSequentialGame( graph_type , n_range = [200,400,600], k_range
         
         for k in k_range:
             average_numberSensors[ n ].append( np.mean( numberSensors[ k ] ) )
-            std_numberSensors[ n ].append( np.std( numberSensors[ k ] ) )
+            std_numberSensors[ n ].append( np.std( numberSensors[ k ] ) / np.sqrt( nAverage ) )
         
     return average_numberSensors, std_numberSensors
 

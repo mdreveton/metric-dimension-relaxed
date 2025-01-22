@@ -90,3 +90,9 @@ def getNonResolvedVertices( equivalent_classes ):
             non_resolved_vertices += equivalent_class
     
     return non_resolved_vertices
+
+
+def getNonResolvedVerticesFromSetOfSensors( S, g = None, distances = None ):
+    identification_vectors = getIdentificationVectors( S, g = g, distances = distances )
+    equivalent_classes = getEquivalentClasses( identification_vectors )
+    return getNonResolvedVertices( equivalent_classes )

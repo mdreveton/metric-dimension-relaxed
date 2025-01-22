@@ -16,9 +16,9 @@ import bigtree as tree
 def GaltonWatsonRandomTree( n, distribution_name = 'poisson', mean = 1, max_iter = 1000 ):
     
     iteration = 0
-    edge_list = []
+    edge_list = [ ]
     while iteration < max_iter and len( edge_list ) != n-1:
-        edge_list = growth_GW( n, distribution_name = 'poisson', mean = 1 )
+        edge_list = growth_GW( n, distribution_name = 'poisson', mean = mean )
         iteration += 1
     
     if len( edge_list ) != n-1:

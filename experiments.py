@@ -15,6 +15,8 @@ from tqdm import tqdm
 
 import relaxedMetricDimension as rmd
 import galtonWatsonTree as gw
+import utils as utils
+
 
 #from networkx.drawing.nx_pydot import graphviz_layout
 #from networkx.nx_agraph.graphviz_layout import graphviz_layout
@@ -32,12 +34,11 @@ real_graph_implemented = [ 'authors', 'roads', 'powergrid', 'copenhagen-calls', 
 
 
 """
-        #g = ig.GraphBase.Tree_Game( n )
-        #g = ig.GraphBase.Erdos_Renyi( n, 4 * np.log(n) / n )
-        #g = ig.Graph.GRG(n, 40 * np.log(n) / n )
-        #g = ig.Graph.GRG(n, 2 * np.sqrt( np.log(n) / n ) )
-        #g = ig.GraphBase.Static_Power_Law( n, 5*n, 2.5 )
-
+#g = ig.GraphBase.Tree_Game( n )
+#g = ig.GraphBase.Erdos_Renyi( n, 4 * np.log(n) / n )
+#g = ig.Graph.GRG(n, 40 * np.log(n) / n )
+#g = ig.Graph.GRG(n, 2 * np.sqrt( np.log(n) / n ) )
+#g = ig.GraphBase.Static_Power_Law( n, 5*n, 2.5 )
 
 n = 200
 
@@ -71,21 +72,36 @@ g = ig.GraphBase.simplify(g)
 graph_type = 'GW'
 n_range = [ 200, 600, 1000 ]
 nAverage = 20
-k_range = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 , 9 ]
+#k_range = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 , 9 ]
 k_range = [ 0, 1, 2, 3, 4, 5, 6 ]
 
-average_sizeResolvingSet, std_sizeResolvingSet, average_sizeLargestNonResolvedSet, std_sizeLargestNonResolvedSet, average_ratioNonResolvedVertices, std_ratioNonResolvedVertices = syntheticGraphsEvolutionMetricDimension( graph_type , n_range = n_range, k_range = k_range, nAverage = nAverage ):
+if graph_type == 'RGG' or graph_type == 'kNN':
+    k_range = [ 0, 1, 2, 3, 4, 5 ]
+elif graph_type == 'BA' or graph_type == 'GW':
+    k_range = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+
+
+average_sizeResolvingSet, std_sizeResolvingSet, average_sizeLargestNonResolvedSet, std_sizeLargestNonResolvedSet, average_ratioNonResolvedVertices, std_ratioNonResolvedVertices = syntheticGraphsEvolutionMetricDimension( graph_type , n_range = n_range, k_range = k_range, nAverage = nAverage )
     
 if graph_type == 'RGG':
     fileName = 'RGG_1,5'
+elif graph_type == 'kNN':
+    fileName = 'kNN_2'
 else:
     fileName = graph_type
 
+average_ratioVerticesInResolvingSet = dict( )
+std_ratioVerticesInResolvingSet = dict( )
+for n in n_range:
+    average_ratioVerticesInResolvingSet[ n ] = list( np.asarray( average_sizeResolvingSet[ n ] ) / n )
+    std_ratioVerticesInResolvingSet[ n ] = list( np.asarray( std_sizeResolvingSet[ n ] ) / n )
+
 savefig = False
-plotFigure( relaxation_values, average_sizeResolvingSet, accuracy_err = std_sizeResolvingSet, ylabel = "$MD_k$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_nAverage_' + str(nAverage) + '.pdf' )
-#plotFigure( relaxation_values, average_relaxation_ratio, accuracy_err = std_relaxation_ratio, ylabel = "Relaxation ratio", methods = n_range, savefig = savefig, fileName = fileName + '_relaxationRatio_nAverage_' + str(nAverage) + '.pdf' )
-plotFigure( relaxation_values, average_sizeLargestNonResolvedSet, accuracy_err = std_sizeLargestNonResolvedSet, ylabel = r"$\alpha$", methods = n_range, savefig = savefig, fileName = fileName + '_sizeLargestNonResolved_nAverage_' + str(nAverage) + '.pdf' )
-plotFigure( relaxation_values, average_ratioNonResolvedVertices, accuracy_err = std_ratioNonResolvedVertices, ylabel = 'Ratio non-resolved', methods = n_range, savefig = savefig, fileName = fileName + '_ratioNonResolvedVertices_nAverage_' + str(nAverage) + '.pdf' )
+#plotFigure( k_range, average_sizeResolvingSet, accuracy_err = std_sizeResolvingSet, ylabel = "$MD_k$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_nAverage_' + str(nAverage) + '.pdf' )
+plotFigure( k_range, average_ratioVerticesInResolvingSet, accuracy_err = std_ratioVerticesInResolvingSet, ylabel = "$MD_k / n$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_over_n_nAverage_' + str(nAverage) + '.pdf' )
+#plotFigure( k_range, average_relaxation_ratio, accuracy_err = std_relaxation_ratio, ylabel = "Relaxation ratio", methods = n_range, savefig = savefig, fileName = fileName + '_relaxationRatio_nAverage_' + str(nAverage) + '.pdf' )
+plotFigure( k_range, average_sizeLargestNonResolvedSet, accuracy_err = std_sizeLargestNonResolvedSet, ylabel = r"$\alpha$", methods = n_range, savefig = savefig, fileName = fileName + '_sizeLargestNonResolved_nAverage_' + str(nAverage) + '.pdf' )
+plotFigure( k_range, average_ratioNonResolvedVertices, accuracy_err = std_ratioNonResolvedVertices, ylabel = 'Ratio non-resolved', methods = n_range, savefig = savefig, fileName = fileName + '_ratioNonResolvedVertices_nAverage_' + str(nAverage) + '.pdf' )
 
 
 # =============================================================================
@@ -94,11 +110,11 @@ plotFigure( relaxation_values, average_ratioNonResolvedVertices, accuracy_err = 
 
 n = 100
 graph_type = 'GW'
-seed = 896803
+seed = 896803 #Note that the seed for GW trees does not work (offspring generation does not care about the seed)
 
 if graph_type == 'BA':
     G = nx.barabasi_albert_graph( n, 1, seed = seed )
-    my_pos = nx.nx_agraph.graphviz_layout( G, prog="twopi" )
+    my_pos = nx.nx_agraph.graphviz_layout( G, prog = "twopi" )
     g = ig.Graph.from_networkx( G )
 
 elif graph_type == 'GW':
@@ -125,7 +141,115 @@ if graph_type in [ 'BA', 'GW' ]:
 else:
     k_range = [ 0, 1, 2, 3, 4 ]
 
-singleGraphVisualization(g, G, my_pos = my_pos, filename = graph_type, savefig = False )
+singleGraphVisualization( g, G, my_pos = my_pos, filename = graph_type, savefig = False )
+
+
+
+# =============================================================================
+# SYNTHETIC GRAPHS: DISTRIBUTION OF THE SIZES OF THE EQUIVALENT CLASSES 
+# =============================================================================
+
+n = 1000
+graph_type = 'BA'
+savefig = False
+
+g = generateSyntheticGraph( n, graph_type )
+
+k = 2
+resolving_set = rmd.relaxedResolvingSet( g, k )
+                    
+identification_vectors = utils.getIdentificationVectors( resolving_set, g = g )
+equivalent_classes = utils.getEquivalentClasses( identification_vectors )
+    
+sizes_equivalent_classes = [ ]
+sizes_non_resolved_equivalent_classes = [ ]
+for equivalent_class in equivalent_classes.values():
+    sizes_equivalent_classes.append( len( equivalent_class ) )
+    if len( equivalent_class ) > 1:
+        sizes_non_resolved_equivalent_classes.append( len( equivalent_class ) )
+    
+plt.hist( sizes_non_resolved_equivalent_classes )
+plt.xlabel( 'Number of vertices', fontsize = SIZE_LABELS )
+plt.ylabel( 'Frequency', fontsize = SIZE_LABELS )
+plt.xticks( fontsize = SIZE_TICKS )
+plt.yticks( fontsize = SIZE_TICKS )
+if(savefig):
+    plt.savefig( graph_type + '_distribution_non_resolved_classes_k_' + str(k) + '.pdf' , bbox_inches='tight' )
+plt.show( )    
+
+
+degrees = g.degree( [i for i in range(n)] )
+degrees_non_leaves = [ ]
+for i in range( n ):
+    if degrees[i] != 1:
+        degrees_non_leaves.append( degrees[ i ] )
+plt.hist( degrees_non_leaves )
+plt.show( )
+
+
+# =============================================================================
+# SYNTHETIC GRAPHS: PLOT WITH NUMBER NON-RESOLVED VERTICES AND LARGEST EQUIVALENT CLASS 
+# =============================================================================
+
+n = 1000
+graph_type = 'BA'
+
+g = generateSyntheticGraph( n, graph_type )
+
+k_range = [ i for i in range( g.diameter( ) + 1 ) ]
+
+number_non_resolved_vertices = [ ]
+sizes_equivalent_classes = [ ]
+
+for k in tqdm( k_range ):
+    resolving_set = rmd.relaxedResolvingSet( g, k )
+    
+    identification_vectors = utils.getIdentificationVectors( resolving_set, g = g )
+    equivalent_classes = utils.getEquivalentClasses( identification_vectors )
+    non_resolved_vertices = utils.getNonResolvedVertices( equivalent_classes )
+    
+    number_non_resolved_vertices.append( len( non_resolved_vertices ) ) 
+    sizes_equivalent_classes.append( np.max( [ len( subset ) for subset in equivalent_classes.values() ] ) )
+
+
+savefig = True
+plt.plot( k_range, number_non_resolved_vertices, linestyle = '-.', marker = '.', label = 'Non-resolved' )
+plt.plot( k_range, sizes_equivalent_classes, linestyle = '-.', marker = '.', label = r'$\alpha$' )
+legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
+plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
+plt.xlabel( 'k', fontsize = SIZE_LABELS )
+plt.ylabel( 'Number of vertices', fontsize = SIZE_LABELS )
+plt.xticks( fontsize = SIZE_TICKS )
+plt.yticks( fontsize = SIZE_TICKS )
+if(savefig):
+    plt.savefig( graph_type + '_non_resolved_and_alpha.pdf' , bbox_inches='tight' )
+plt.show( )
+
+
+
+# =============================================================================
+# SYNTHETIC GRAPHS: SBM
+# =============================================================================
+
+n_per_community = 300
+k = 2
+
+n = n_per_community * k
+block_sizes = [ n_per_community for i in range(k) ]
+
+a = 4
+b = 2
+
+rate_matrix = b * np.ones( k ) + (a-b) * np.eye( k )
+pref_matrix = rate_matrix * np.log( n ) / n
+
+g = ig.GraphBase.SBM( n, pref_matrix, block_sizes, directed=False, loops=False )
+
+
+largest_cc = getLargestConnectedComponent( g )
+
+
+difficulty = (np.sqrt(a) - np.sqrt(b))**2
 
 
 
@@ -177,7 +301,7 @@ singleGraphVisualization(g, G, my_pos = my_pos, filename = graph_name, savefig =
 
 
 """
-OLD CODE COULD BE SAFELY DELETED (25 DECEMBER)
+OLD CODE COULD BE SAFELY DELETED (25 DECEMBER 2024)
 
 g = ig.GraphBase.Tree_Game( 100 )
 g = ig.GraphBase.Barabasi( 75, 1 )
@@ -246,15 +370,20 @@ def syntheticGraphsEvolutionMetricDimension( graph_type , n_range = [200,400,600
 
             for k in k_range:
                 resolving_set = rmd.relaxedResolvingSet( g, k )
-                nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
+                
+                identification_vectors = utils.getIdentificationVectors( resolving_set, g = g )
+                equivalent_classes = utils.getEquivalentClasses( identification_vectors )
+                non_resolved_equivalent_classes = utils.getNonResolvedEquivalentClasses( equivalent_classes )
+                non_resolved_sets_of_vertices = utils.getNonResolvedVertices( equivalent_classes )
+                
                 sizeResolvingSet[ k ][ run ] = len( resolving_set )
                 
-                if nonResolvedSetsOfVertices == [ ]:
+                if non_resolved_sets_of_vertices == [ ]: #all the vertices are resolved
                     sizeLargestNonResolvedSet[ k ][ run ] = 0
                     ratioNonResolvedVertices[ k ][ run ] = 0 
                 else:
-                    sizeLargestNonResolvedSet[ k ][ run ] = np.max( [ len(subset) for subset in nonResolvedSetsOfVertices ] )
-                    ratioNonResolvedVertices[ k ][ run ] = np.sum( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) / n
+                    sizeLargestNonResolvedSet[ k ][ run ] = np.max( [ len( subset ) for subset in non_resolved_equivalent_classes ] )
+                    ratioNonResolvedVertices[ k ][ run ] = len( non_resolved_sets_of_vertices ) / n
                 
                 average_degree = 2 * g.ecount( ) / g.vcount( )
                 ratioWithDegree[ k ][ run ] = (average_degree)**( k//2 ) * sizeResolvingSet[ k ][ run ] / sizeResolvingSet[ 0 ][ run ]
@@ -323,7 +452,7 @@ def realGraphsEvolutionMetricDimension( graph_names = real_graph_implemented, k_
 # =============================================================================
 
 
-def generateSyntheticGraph( n, graph_type, enforceConnected = True ):
+def generateSyntheticGraph( n, graph_type ):
     if graph_type not in synthetic_graph_implemented:
         raise TypeError( 'This synthetic graph is not implemented' )
     
@@ -334,14 +463,23 @@ def generateSyntheticGraph( n, graph_type, enforceConnected = True ):
         g = gw.GaltonWatsonRandomTree( n, distribution_name = 'poisson', mean = 3 )
             
     elif graph_type == 'CM':
-        degree_sequence = sp.stats.lognorm.rvs( 2, loc = 2, size = n )
-        for i in range(n):
-            degree_sequence[ i ] = int( degree_sequence[i] ) 
-        if np.sum( degree_sequence ) % 2 == 1:
-            degree_sequence[ 1 ] += 1 
+        #degree_sequence = 3 * np.ones(n) +  sp.stats.lognorm.rvs( 2, loc = 0, size = n )
+        #degree_sequence = sp.stats.lognorm.rvs( 2, loc = 3, size = n )
+        degree_sequence = [0,1]
+        while( ig.is_graphical( degree_sequence ) == False ):
+            degree_sequence = 2 * np.ones(n) + sp.stats.zipfian.rvs( 2.5, n-3, size = n )
+            for i in range(n):
+                degree_sequence[ i ] = int( degree_sequence[i] )
+                if degree_sequence[ i ] > 150:
+                    print( 'The degree of a vertex is too high: we reduced to 150' )
+                    degree_sequence[ i ] = np.sqrt( n )
+            if np.sum( degree_sequence ) % 2 == 1:
+                degree_sequence[ 1 ] += 1 
+            
         g = ig.Graph.Degree_Sequence( degree_sequence, method = 'configuration' )
         g = ig.GraphBase.simplify( g )
         
+        """
         if enforceConnected:
             max_tries = 100
             number_trials = 0
@@ -351,25 +489,28 @@ def generateSyntheticGraph( n, graph_type, enforceConnected = True ):
                     degree_sequence[ i ] = int( degree_sequence[i] ) 
                 if np.sum( degree_sequence ) % 2 == 1:
                     degree_sequence[ 1 ] += 1 
-                g = ig.Graph.Degree_Sequence( degree_sequence, method = 'configuration' )
+                G = nx.configuration_model( degree_sequence )
+                g = ig.from_networkx( G )
+                #g = ig.Graph.Degree_Sequence( degree_sequence, method = 'configuration' )
                 g = ig.GraphBase.simplify( g )
                 number_trials += 1
-        
+        """
         
     elif graph_type == 'RGG':
         g = ig.Graph.GRG(n, 1.5 * np.sqrt( np.log(n) / ( n * np.pi ) ) )
-        
+        """
         if enforceConnected:
             max_tries = 100
             number_trials = 0
             while (number_trials < max_tries and g.is_connected() == False ):
                 g = ig.Graph.GRG(n, 1.5 * np.sqrt( np.log(n) / ( n * np.pi ) ) )
                 number_trials += 1
-            
+        """    
     elif graph_type == 'kNN':
         #X = np.random.multivariate_normal( np.zeros(2), np.eye(2), n )
-        X1 = np.random.multivariate_normal( np.ones(2), np.eye(2), n//2 )
-        X2 = np.random.multivariate_normal( -np.ones(2), np.eye(2), n//2 )
+        mu = 2
+        X1 = np.random.multivariate_normal( mu * np.ones(2), np.eye(2), n//2 )
+        X2 = np.random.multivariate_normal( - mu * np.ones(2), np.eye(2), n//2 )
         X = np.concatenate( (X1, X2) )
         g = kNN_graph( X )
 
@@ -535,13 +676,13 @@ def plotFigure( x, accuracy_mean, accuracy_err = None, methods = None,
             legend = plt.legend( loc=0,  fancybox = True, fontsize = SIZE_LEGEND )
             plt.setp( legend.get_title(),fontsize = SIZE_LEGEND )
 
-    plt.xlabel( xlabel, fontsize = SIZE_LABELS)
-    plt.ylabel( ylabel, fontsize = SIZE_LABELS)
+    plt.xlabel( xlabel, fontsize = SIZE_LABELS )
+    plt.ylabel( ylabel, fontsize = SIZE_LABELS )
     
     if xticks != None:
-        plt.xticks( xticks, fontsize = SIZE_TICKS)
+        plt.xticks( xticks, fontsize = SIZE_TICKS )
     else:
-        plt.xticks( fontsize = SIZE_TICKS)
+        plt.xticks( fontsize = SIZE_TICKS )
     
     if yticks != None:
         plt.yticks( yticks, fontsize = SIZE_TICKS )
@@ -578,7 +719,9 @@ def singleGraphVisualization( g = None, G = None, my_pos = None, k_range = [0,1,
     for k in k_range:
         
         resolvingSet[k] = rmd.relaxedResolvingSet( g, k )
-        nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolvingSet[k], k, g = g )
+        identification_vector = utils.getIdentificationVectors( resolvingSet[k], g = g )
+        equivalent_classes = utils.getEquivalentClasses( identification_vector )
+        nonResolvedSetsOfVertices = utils.getNonResolvedEquivalentClasses( equivalent_classes )
         
         if len( nonResolvedSetsOfVertices ) > 0:
             largestUnresolvedSet[ k ] = nonResolvedSetsOfVertices[ np.argmax( [ len( subset) for subset in nonResolvedSetsOfVertices ] ) ]
@@ -596,7 +739,7 @@ def singleGraphVisualization( g = None, G = None, my_pos = None, k_range = [0,1,
         nx.draw( G, node_size = node_size, pos = my_pos, with_labels = False)
         nx.draw_networkx_nodes( G, label = True, pos = my_pos, linewidths = 2, edgecolors = 'black', node_color = 'white')
         nx.draw_networkx_nodes( G, pos = my_pos,label = True, nodelist = resolvingSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'red')
-        nx.draw_networkx_nodes( G, pos = my_pos, nodelist = largestUnresolvedSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'royalblue')
+        nx.draw_networkx_nodes( G, pos = my_pos, nodelist = largestUnresolvedSet[ k ], linewidths = 2, edgecolors = 'black', node_color = 'orange')
         nx.draw_networkx_nodes( G, pos = my_pos, nodelist = resolvedVertices[ k ], linewidths = 2, edgecolors = 'black', node_color = 'lightgreen' )
         nx.draw_networkx_edges( G, my_pos, width = 1 )
         if savefig:
