@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jan  3 10:56:11 2025
-
-@author: dreveton
 """
 
 

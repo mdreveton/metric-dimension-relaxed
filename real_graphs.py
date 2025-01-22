@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Nov 16 21:09:26 2024
-
-@author: maximilien
 """
 
 import networkx as nx
