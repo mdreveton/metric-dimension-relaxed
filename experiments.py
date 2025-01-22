@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov 11 10:48:59 2024
-
-@author: dreveton
 """
 
 import networkx as nx
@@ -30,37 +28,6 @@ SIZE_LEGEND = 18
 synthetic_graph_implemented = [ 'BA', 'GW', 'CM', 'RGG', 'kNN' ]
 real_graph_implemented = [ 'authors', 'roads', 'powergrid', 'copenhagen-calls', 'copenhagen-friends', 'yeast' ]
 #Note: computations of metric dimension on the powergrid network takes time.
-
-
-
-"""
-#g = ig.GraphBase.Tree_Game( n )
-#g = ig.GraphBase.Erdos_Renyi( n, 4 * np.log(n) / n )
-#g = ig.Graph.GRG(n, 40 * np.log(n) / n )
-#g = ig.Graph.GRG(n, 2 * np.sqrt( np.log(n) / n ) )
-#g = ig.GraphBase.Static_Power_Law( n, 5*n, 2.5 )
-
-n = 200
-
-degree_sequence = sp.stats.zipf.rvs( 2.5, loc = 2, size = n )
-
-degree_sequence = sp.stats.lognorm.rvs( 1, loc = 2, size = n )
-for i in range(n):
-    degree_sequence[ i ] = int( degree_sequence[i] ) 
-
-
-max_degree = n/3
-for i in range(n):
-    if degree_sequence[ i ] > max_degree:
-        degree_sequence[ i ] = int( max_degree ) 
-
-    
-if np.sum( degree_sequence ) % 2 == 1:
-    degree_sequence[ 1 ] += 1 
-g = ig.Graph.Degree_Sequence( degree_sequence, method='configuration' )
-g = ig.GraphBase.simplify(g)
-
-"""
 
 
 """

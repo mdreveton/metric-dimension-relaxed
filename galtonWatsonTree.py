@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 12 18:58:05 2024
-
-@author: dreveton
 """
 
 
@@ -50,55 +48,6 @@ def growth_GW( n, distribution_name = 'poisson', mean = 1 ):
     return edge_list
 
 
-def GW_( n, distribution_name = 'poisson', mean = 1 ):
-    """
-    (AS OF 26-12-2024) This is an old implementation using bigtree library. Shouldnt be needed anymore
-
-    Parameters
-    ----------
-    n : TYPE
-        DESCRIPTION.
-    distribution_name : TYPE, optional
-        DESCRIPTION. The default is 'poisson'.
-    mean : TYPE, optional
-        DESCRIPTION. The default is 1.
-
-    Returns
-    -------
-    t : TYPE
-        DESCRIPTION.
-
-    """
-    
-    t = tree.Node( '0', generation = 0, alive = 1 )
-    n_vertices = 1
-    aliveVertices = tree.findall( t, lambda node: node.alive == 1 )
-    
-    while len( aliveVertices ) > 0 and n_vertices < n:
-        for aliveVertex in aliveVertices:
-            nb_children = discrete_distribution( distribution_name, mean )
-            n_vertices += nb_children
-            for child in range( nb_children ):
-                tree.Node( aliveVertex.name + str(child), parent = aliveVertex, generation = aliveVertex.get_attr( 'generation' ) + 1, alive = 1 )
-            aliveVertex.set_attrs( { 'alive' : 0 } )
-            
-        aliveVertices = tree.findall( t, lambda node: node.alive == 1 )
-    
-    return t
-
-
-def alive_vertices( t ):
-    res = [ ]
-    for leaf in t.leaves:
-        if leaf.get_attr( 'alive' ):
-            res += [ leaf ]
-    return res 
-
-def check_if_process_alive( t ):
-    for leaf in t.leaves:
-        if leaf.get_attr( 'alive' ):
-            return True
-    return False
 
     
 def discrete_distribution( distribution_name, mean ):

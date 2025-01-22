@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Nov 15 17:03:27 2024
-
-@author: dreveton
 """
 
 
@@ -28,6 +26,11 @@ real_graph_implemented = [ 'authors', 'roads', 'powergrid', 'copenhagen-calls', 
 
 
 """
+
+# =============================================================================
+# TWO-STEP LOCALIZATION ON SYNTHETIC NETWORKS
+# =============================================================================
+
 
 graph_type = 'RGG'
 
@@ -62,7 +65,7 @@ experiments.plotFigure( k_range, average_number_sensors, std_number_sensors, yla
 
 
 # =============================================================================
-# SEQUENTIAL GAME ON REAL NETWORKS
+# TWO-STEP LOCALIZATION ON REAL NETWORKS
 # =============================================================================
 
 
@@ -425,111 +428,3 @@ def partialResolvingSet( setToResolve, g = None, distances = None, print_detaile
 
     return resolving_set
 
-
-
-
-"""
-BELOW: SOME OLD CODE SHOULD NOT BE NEEDED ANYMORE (AS OF JANUARY 3RD 2025)
-
-average_number_cameras = dict( )
-std_number_cameras = dict( )
-average_fixedCameras = dict( )
-std_fixedCameras = dict( )
-average_ExtraCameras = dict( )
-std_ExtraCameras = dict( )
-
-average_worst_case_number_cameras = dict( )
-std_worst_case_number_cameras = dict( )
-
-for n in n_range:
-    average_number_cameras[ n ] = [ ]
-    std_number_cameras[ n ] = [ ]
-    
-    average_fixedCameras[ n ] = [ ]
-    std_fixedCameras[ n ] = [ ]
-
-    average_ExtraCameras[ n ] = [ ]
-    std_ExtraCameras[ n ] = [ ]
-
-    average_worst_case_number_cameras[ n ] = [ ]
-    std_worst_case_number_cameras[ n ] = [ ]
-
-
-for dummy in tqdm( range( len( n_range ) ) ):
-    n = n_range[ dummy ]
-    
-    numberCameras = dict( )
-    numberFixedCameras = dict( )
-    numberExtraCameras = dict( )
-    
-    if samplingSize == None:
-        samplingSize = n
-    elif samplingSize > n:
-        samplingSize = n
-        
-    for k in relaxation_values:
-        numberCameras[ k ] = np.zeros( ( nAverage, samplingSize ) )
-        numberFixedCameras[ k ] = np.zeros( ( nAverage, samplingSize ) )
-        numberExtraCameras[ k ] = np.zeros( ( nAverage, samplingSize ) )
-        
-    for run in range( nAverage ):
-        
-        g = experiments.generateSyntheticGraph( n, graph_type )
-        
-        for k_ in tqdm( range( len(relaxation_values) ) ):
-            k = relaxation_values[ k_ ]
-        #for k in relaxation_values:
-            fixed_cameras = rmd.relaxedResolvingSet( g, k, print_detailed_running_time = False )
-            nonResolvedSetsOfVertices = rmd.nonResolvedSets( fixed_cameras, k, g = g )
-            
-            nonResolvedVertices = [ ]
-            for elt in nonResolvedSetsOfVertices:
-                nonResolvedVertices += elt
-            
-            robber_positions = list( range(n) )
-            np.random.shuffle( robber_positions )
-            robber_positions = robber_positions[ : samplingSize ]
-            
-            for sampling in range( samplingSize ):
-            #for sampling_robber_position in robber_positions:
-                
-                robber = robber_positions[ sampling ]
-                
-                if robber not in nonResolvedVertices:
-                    extra_cameras = [ ]
-                else:
-                    for elt in nonResolvedSetsOfVertices:
-                        if robber in elt:
-                            setOfRobber = elt
-                            break
-                    extra_cameras = partialResolvingSet( g, setOfRobber, print_detailed_running_time = False )
-                
-                numberCameras[ k ][ run, sampling ] = len( extra_cameras ) + len( fixed_cameras )
-                numberFixedCameras[ k ][ run, sampling ] = len( fixed_cameras )
-                numberExtraCameras[ k ][ run, sampling ] = len( extra_cameras )
-                
-    for k in relaxation_values:
-        average_number_cameras[ n ].append( np.mean( numberCameras[k] ) )
-        std_number_cameras[ n ].append( np.std( numberCameras[k] ) )
-        
-        average_fixedCameras[ n ].append( np.mean( numberFixedCameras[k] ) )
-        std_fixedCameras[ n ].append( np.std( numberFixedCameras[k] ) )
-
-        average_ExtraCameras[ n ].append( np.mean( numberExtraCameras[k] ) )
-        std_ExtraCameras[ n ].append( np.std( numberExtraCameras[k] ) )
-
-        average_worst_case_number_cameras[ n ].append( np.mean( [ np.max( numberCameras[k][run,:]) for run in range(nAverage) ] ) ) 
-        std_worst_case_number_cameras[ n ].append( np.std( [ np.max( numberExtraCameras[k][run,:]) for run in range( nAverage ) ] ) ) 
-
-if graph_type == 'RGG':
-    fileName = 'RGG_1,5'
-else:
-    fileName = graph_type
-savefig = False
-experiments.plotFigure( relaxation_values, average_number_cameras, std_number_cameras, ylabel = "Sensors", methods = n_range, savefig = savefig, fileName = fileName + '_TotalCameras_nAverage_' + str(nAverage) + '_samplingSize_' + str(samplingSize) + '.pdf' )
-experiments.plotFigure( relaxation_values, average_worst_case_number_cameras, std_worst_case_number_cameras, ylabel = "Sensors", methods = n_range, savefig = savefig, fileName = fileName + '_TotalCameras_worstCase_nAverage_' + str(nAverage) + '_samplingSize_' + str(samplingSize) + '.pdf' )
-experiments.plotFigure( relaxation_values, average_fixedCameras, std_fixedCameras, ylabel = "Fixed cameras", methods = n_range, savefig = savefig, fileName = fileName + '_FixedCameras_nAverage_' + str(nAverage) + '_samplingSize_' + str(samplingSize) + '.pdf' )
-experiments.plotFigure( relaxation_values, average_ExtraCameras, std_ExtraCameras, ylabel = "Extra cameras", methods = n_range, savefig = savefig, fileName = fileName + '_ExtraCameras_nAverage_' + str(nAverage) + '_samplingSize_' + str(samplingSize) + '.pdf' )
-
-
-"""
