@@ -33,7 +33,7 @@ real_graph_implemented = [ 'authors', 'roads', 'powergrid', 'copenhagen-calls', 
 """
 
 # =============================================================================
-# SYNTHETIC GRAPHS: EVOLUTIUON OF MD AS FUNCTION OF THE RELAXATION PARAMETER k 
+# SYNTHETIC GRAPHS: EVOLUTION OF MD AS FUNCTION OF THE RELAXATION PARAMETER k 
 # =============================================================================
 
 graph_type = 'GW'
@@ -63,20 +63,27 @@ for n in n_range:
     average_ratioVerticesInResolvingSet[ n ] = list( np.asarray( average_sizeResolvingSet[ n ] ) / n )
     std_ratioVerticesInResolvingSet[ n ] = list( np.asarray( std_sizeResolvingSet[ n ] ) / n )
 
+average_alpha_over_n = dict( )
+std_alpha_over_n = dict( )
+for n in n_range:
+    average_alpha_over_n[ n ] = list( np.asarray( average_sizeLargestNonResolvedSet[ n ] ) / n )
+    std_alpha_over_n[ n ] = list( np.asarray( std_sizeLargestNonResolvedSet[ n ] ) / n )
+
+
 savefig = False
 #plotFigure( k_range, average_sizeResolvingSet, accuracy_err = std_sizeResolvingSet, ylabel = "$MD_k$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_nAverage_' + str(nAverage) + '.pdf' )
-plotFigure( k_range, average_ratioVerticesInResolvingSet, accuracy_err = std_ratioVerticesInResolvingSet, ylabel = "$MD_k / n$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_over_n_nAverage_' + str(nAverage) + '.pdf' )
+plotFigure( k_range, average_ratioVerticesInResolvingSet, accuracy_err = std_ratioVerticesInResolvingSet, ylabel = "$MD_k \, / \, n$", methods = n_range, savefig = savefig, fileName = fileName + '_MDk_over_n_nAverage_' + str(nAverage) + '.pdf' )
 #plotFigure( k_range, average_relaxation_ratio, accuracy_err = std_relaxation_ratio, ylabel = "Relaxation ratio", methods = n_range, savefig = savefig, fileName = fileName + '_relaxationRatio_nAverage_' + str(nAverage) + '.pdf' )
 plotFigure( k_range, average_sizeLargestNonResolvedSet, accuracy_err = std_sizeLargestNonResolvedSet, ylabel = r"$\alpha$", methods = n_range, savefig = savefig, fileName = fileName + '_sizeLargestNonResolved_nAverage_' + str(nAverage) + '.pdf' )
 plotFigure( k_range, average_ratioNonResolvedVertices, accuracy_err = std_ratioNonResolvedVertices, ylabel = 'Ratio non-resolved', methods = n_range, savefig = savefig, fileName = fileName + '_ratioNonResolvedVertices_nAverage_' + str(nAverage) + '.pdf' )
-
+plotFigure( k_range, average_alpha_over_n, accuracy_err = std_alpha_over_n, ylabel = r"$\alpha \, / \, n$", methods = n_range, savefig = savefig, fileName = fileName + '_relativeSizeLargestNonResolved_nAverage_' + str(nAverage) + '.pdf' )
 
 # =============================================================================
 # SYNTHETIC GRAPHS: VIZUALISATION OF RESOLVING SET IN SMALL GRAPHS
 # =============================================================================
 
 n = 100
-graph_type = 'GW'
+graph_type = 'BA'
 seed = 896803 #Note that the seed for GW trees does not work (offspring generation does not care about the seed)
 
 if graph_type == 'BA':
@@ -225,15 +232,15 @@ difficulty = (np.sqrt(a) - np.sqrt(b))**2
 # REAL GRAPHS: STATISTICS AND EVOLUTION OF METRIC DIMENSION
 # =============================================================================
 
-relaxation_values = [ 0, 1, 2, 3, 4 ]
+k_range = [ 0, 1, 2, 3, 4 ]
 graph_names = [ 'authors', 'copenhagen-calls', 'copenhagen-friends', 'yeast' ]
-sizeResolvingSet, relaxationRatio, largestNonResolvedSet, ratioNonResolvedVertices = realGraphsEvolutionMetricDimension( graph_names = graph_names, k_range = relaxation_values )
+sizeResolvingSet, relaxationRatio, largestNonResolvedSet, ratioNonResolvedVertices = realGraphsEvolutionMetricDimension( graph_names = graph_names, k_range = k_range )
 
 savefig = False
-plotFigure( relaxation_values, sizeResolvingSet, ylabel = "$MD_k$", methods = graph_names, savefig = savefig, fileName = 'realGraphs_MDk.pdf', xticks = relaxation_values )
-plotFigure( relaxation_values, relaxationRatio, ylabel = "Relaxation ratio", methods = graph_names, savefig = savefig, fileName =  'realGraphs_relaxationRatio.pdf', xticks = relaxation_values )
-plotFigure( relaxation_values, largestNonResolvedSet, ylabel = r"$\alpha$", methods = graph_names, savefig = savefig, fileName = 'realGraphs_sizeLargestNonResolved.pdf', xticks = relaxation_values )
-plotFigure( relaxation_values, ratioNonResolvedVertices, ylabel = 'Ratio non-resolved', methods = graph_names, savefig = savefig, fileName = 'realGraph_ratioNonResolvedVertices.pdf', xticks = relaxation_values )
+plotFigure( k_range, sizeResolvingSet, ylabel = "$MD_k$", methods = graph_names, savefig = savefig, fileName = 'realGraphs_MDk.pdf', xticks = relaxation_values )
+plotFigure( k_range, relaxationRatio, ylabel = "Relaxation ratio", methods = graph_names, savefig = savefig, fileName =  'realGraphs_relaxationRatio.pdf', xticks = relaxation_values )
+plotFigure( k_range, largestNonResolvedSet, ylabel = r"$\alpha$", methods = graph_names, savefig = savefig, fileName = 'realGraphs_sizeLargestNonResolved.pdf', xticks = relaxation_values )
+plotFigure( k_range, ratioNonResolvedVertices, ylabel = 'Ratio non-resolved', methods = graph_names, savefig = savefig, fileName = 'realGraph_ratioNonResolvedVertices.pdf', xticks = relaxation_values )
 
 
 for graph_name in graph_names:
@@ -241,11 +248,17 @@ for graph_name in graph_names:
         relaxationRatio[ graph_name ].append( sizeResolvingSet[ graph_name ][ k ] / sizeResolvingSet[ graph_name ][ 0 ] )
 
 relativeSizeResolvingSet = dict ( )
+average_alpha_over_n = dict( )
 for graph_name in graph_names:
     relativeSizeResolvingSet[ graph_name ] = [ ]
+    average_alpha_over_n[ graph_name ] = [ ]
     G = getRealGraph( graph_name )
     for k in k_range:
         relativeSizeResolvingSet[ graph_name ].append( sizeResolvingSet[ graph_name ][ k ] / nx.number_of_nodes( G ) )
+        average_alpha_over_n[ graph_name ].append( largestNonResolvedSet[ graph_name ][ k ] / nx.number_of_nodes( G ) )
+
+plotFigure( k_range, relativeSizeResolvingSet, ylabel = "$MD_k \, / \, n$", methods = graph_names, savefig = savefig, fileName = 'realGraphs_relativeSizeResolvingSet.pdf', xticks = relaxation_values )
+plotFigure( k_range, average_alpha_over_n, ylabel = r"$\alpha \, / \, n$", methods = graph_names, savefig = savefig, fileName = 'realGraphs_relativeSizeLargestNonResolved.pdf', xticks = relaxation_values )
 
 
 # =============================================================================
@@ -396,16 +409,21 @@ def realGraphsEvolutionMetricDimension( graph_names = real_graph_implemented, k_
                 
         for k in k_range:
             resolving_set = rmd.relaxedResolvingSet( g, k )
-            nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
+            
+            #nonResolvedSetsOfVertices = rmd.nonResolvedSets( resolving_set, k, g = g )
+            identification_vectors = utils.getIdentificationVectors( resolving_set, g = g )
+            equivalent_classes = utils.getEquivalentClasses( identification_vectors )
+            non_resolved_equivalent_classes = utils.getNonResolvedEquivalentClasses( equivalent_classes )
+            non_resolved_vertices = utils.getNonResolvedVertices( equivalent_classes )
 
             sizeResolvingSet[ graph_name ].append( len( resolving_set ) )
             
-            if len( nonResolvedSetsOfVertices ) == 0:
+            if len( non_resolved_vertices ) == 0:
                 largestNonResolvedSet[ graph_name ].append( 0 )
                 ratioNonResolvedVertices[ graph_name ].append( 0 ) 
             else:
-                largestNonResolvedSet[ graph_name ].append( np.max( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) )
-                ratioNonResolvedVertices[ graph_name ].append( np.sum( [ len(subset) for subset in nonResolvedSetsOfVertices ] ) / g.vcount( ) )
+                largestNonResolvedSet[ graph_name ].append( np.max( [ len(subset) for subset in non_resolved_equivalent_classes ] ) )
+                ratioNonResolvedVertices[ graph_name ].append( len( non_resolved_vertices ) / g.vcount( ) )
                 
                 #average_degree = 2 * g.ecount( ) / g.vcount( )
                 #ratioWithDegree[ graph_name ][ k ] = (average_degree)**( k//2 ) * sizeResolvingSet[ k ][ run ] / sizeResolvingSet[ 0 ][ run ]
@@ -572,7 +590,13 @@ def getRealGraph( graph_name ):
 
     elif graph_name.lower( ) == 'copenhagen-friends':
         G = nx.read_edgelist('datasets/Copenhagen-graphs/fb_friends.csv/edges.csv', delimiter=',')
-    
+        
+        mapping = dict( )
+        for node in G.nodes:
+            mapping[ node ] = node.rstrip()
+        G = nx.relabel_nodes( G, mapping )
+
+        
         positions = {}
         i = 0
         with open('datasets/Copenhagen-graphs/fb_friends.csv/nodes.csv', 'r') as file:
