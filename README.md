@@ -1,4 +1,4 @@
-Code for the paper Reducing Sensor Requirements by Relaxing the Network Metric Dimension
+Code to reproduce the results of the paper 'Reducing Sensor Requirements by Relaxing the Network Metric Dimension'
 
 
 experiments.py : file to run the experiments of Section 4
